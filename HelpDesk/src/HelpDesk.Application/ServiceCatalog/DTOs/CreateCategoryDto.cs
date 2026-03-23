@@ -1,0 +1,8 @@
+﻿namespace HelpDesk.Application.ServiceCatalog.DTOs
+{
+    public sealed class CreateCategoryDto
+    {
+        public string? Name { get; set; }
+        public int? ParentId { get; set; }
+    }
+}

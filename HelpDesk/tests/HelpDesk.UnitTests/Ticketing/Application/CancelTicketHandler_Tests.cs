@@ -1,0 +1,43 @@
+﻿using FluentAssertions;
+using HelpDesk.Application.Shared.Errors;
+using HelpDesk.Application.Ticketing.DTOs;
+using HelpDesk.Application.Ticketing.UseCases.CancelTicket;
+using HelpDesk.Domain.Ticketing.Aggregates;
+using HelpDesk.Domain.Ticketing.Enums;
+using HelpDesk.Domain.Ticketing.ValueObjects;
+using HelpDesk.UnitTests.Shared.Fakes;
+using HelpDesk.UnitTests.Ticketing.Fakes;
+
+namespace HelpDesk.UnitTests.Ticketing.Application
+{
+    public class CancelTicketHandler_Tests
+    {
+        [Fact]
+        public async Task Handle_Should_Allow_Only_Novo_Or_EmAnalise()
+        {
+            var users = new InMemoryUserReadPort();
+            users.Seed(new(10, "Owner", "o@x.com", "Requester"));
+            users.Seed(new(99, "Agent", "a@x.com", "Agent"));
+
+            var repo = new InMemoryTicketRepository();
+            var clock = new FakeClock();
+
+            var t = Ticket.CreateNew(TicketTitle.Create("T"), TicketDescription.Create("D"), TicketPriority.Media, 10, 1, clock.Now);
+            repo.Seed(t);
+
+            t.AssignToAgent(99, clock.Now.AddMinutes(1));
+            t.ChangeStatus(TicketStatus.EmAndamento, 99, clock.Now.AddMinutes(2));
+
+            var handler = new CancelTicketHandler(repo, users, clock, notify: new FakeNotificationPort());
+
+            var act = async () => await handler.HandleAsync(new CancelTicketCommand(
+                Id: t.Id,
+                UserId: 10,
+                Dto: new CancelTicketDto { Reason = "No longer needed" }
+            ));
+
+            (await act.Should().ThrowAsync<AppException>())
+                .Where(e => e.StatusCode == 400);
+        }
+    }
+}
