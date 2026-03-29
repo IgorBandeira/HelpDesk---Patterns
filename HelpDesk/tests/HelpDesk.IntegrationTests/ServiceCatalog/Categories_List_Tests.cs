@@ -28,7 +28,7 @@ namespace HelpDesk.IntegrationTests.ServiceCatalog
             var items = await client.GetFromJsonAsync<List<CategoryItemResponse>>("/api/categories?page=1&pageSize=20");
 
             Assert.NotNull(items);
-            Assert.Equal(3, items!.Count);
+            Assert.Equal(13, items!.Count);
         }
 
         [Fact]

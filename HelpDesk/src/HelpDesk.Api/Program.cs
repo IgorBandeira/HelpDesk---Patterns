@@ -46,6 +46,8 @@ builder.Services.AddSharedInfrastructure();
 builder.Services.AddEmailInfrastructure(builder.Configuration);
 builder.Services.AddFileStorageInfrastructure(builder.Configuration);
 
+builder.Services.AddPersistence(builder.Configuration);
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers();
