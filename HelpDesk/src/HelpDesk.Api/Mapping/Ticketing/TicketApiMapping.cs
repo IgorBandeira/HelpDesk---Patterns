@@ -4,6 +4,7 @@ using HelpDesk.Api.Mapping.Attachments;
 using HelpDesk.Api.Mapping.Collaboration;
 using HelpDesk.Api.Mapping.Shared;
 using HelpDesk.Application.Ticketing.DTOs;
+using HelpDesk.Application.Operations.DTOs;
 
 namespace HelpDesk.Api.Mapping.Ticketing
 {

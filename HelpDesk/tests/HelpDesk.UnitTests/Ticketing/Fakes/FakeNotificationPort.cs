@@ -1,4 +1,4 @@
-﻿using HelpDesk.Application.Ticketing.Ports;
+﻿using HelpDesk.Application.Operations.Ports;
 
 namespace HelpDesk.UnitTests.Ticketing.Fakes
 {

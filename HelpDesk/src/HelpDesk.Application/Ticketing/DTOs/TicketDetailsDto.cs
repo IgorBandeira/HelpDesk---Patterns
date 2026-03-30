@@ -1,6 +1,7 @@
 ﻿using HelpDesk.Application.Attachments.DTOs;
 using HelpDesk.Application.Collaboration.DTOs;
 using HelpDesk.Application.Shared.DTOs;
+using HelpDesk.Application.Operations.DTOs;
 
 namespace HelpDesk.Application.Ticketing.DTOs
 {

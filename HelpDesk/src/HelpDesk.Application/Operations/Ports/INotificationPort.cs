@@ -1,4 +1,4 @@
-﻿namespace HelpDesk.Application.Ticketing.Ports
+namespace HelpDesk.Application.Operations.Ports
 {
     public interface INotificationPort
     {

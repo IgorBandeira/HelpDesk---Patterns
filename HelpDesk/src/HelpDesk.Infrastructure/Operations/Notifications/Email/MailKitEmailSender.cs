@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace HelpDesk.Infrastructure.Notifications.Email
+namespace HelpDesk.Infrastructure.Operations.Notifications.Email
 {
     public sealed class MailKitEmailSender : IEmailSender
     {

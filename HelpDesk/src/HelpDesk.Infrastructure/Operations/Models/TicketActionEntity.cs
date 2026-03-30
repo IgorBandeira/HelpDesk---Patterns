@@ -1,4 +1,6 @@
-﻿namespace HelpDesk.Infrastructure.Ticketing.Models
+using HelpDesk.Infrastructure.Ticketing.Models;
+
+namespace HelpDesk.Infrastructure.Operations.Models
 {
     public sealed class TicketActionEntity
     {

@@ -1,8 +1,8 @@
-﻿using HelpDesk.Infrastructure.Ticketing.Models;
+using HelpDesk.Infrastructure.Operations.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace HelpDesk.Infrastructure.Persistence.Configurations.Ticketing
+namespace HelpDesk.Infrastructure.Persistence.Configurations.Operations
 {
     public sealed class TicketActionEntityConfiguration : IEntityTypeConfiguration<TicketActionEntity>
     {

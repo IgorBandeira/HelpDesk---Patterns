@@ -1,13 +1,13 @@
 ﻿using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Ports;
-using HelpDesk.Application.Ticketing.Ports;
+using HelpDesk.Application.Operations.Ports;
 using HelpDesk.Infrastructure.Persistence;
-using HelpDesk.Infrastructure.Ticketing.Models;
-using HelpDesk.Infrastructure.Ticketing.Notifications.Templates;
+using HelpDesk.Infrastructure.Operations.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using HelpDesk.Infrastructure.Operations.Notifications.Templates;
 
-namespace HelpDesk.Infrastructure.Notifications
+namespace HelpDesk.Infrastructure.Operations.Queries
 {
     public sealed class NotificationPort : INotificationPort
     {

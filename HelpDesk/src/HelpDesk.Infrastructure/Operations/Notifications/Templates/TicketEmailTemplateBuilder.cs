@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using HelpDesk.Infrastructure.Ticketing.Models;
 
-namespace HelpDesk.Infrastructure.Ticketing.Notifications.Templates
+namespace HelpDesk.Infrastructure.Operations.Notifications.Templates
 {
     public sealed class TicketEmailTemplateBuilder
     {

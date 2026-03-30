@@ -1,4 +1,4 @@
-﻿namespace HelpDesk.Application.Ticketing.DTOs
+namespace HelpDesk.Application.Operations.DTOs
 {
     public sealed record TicketActionDto(
         string Description,

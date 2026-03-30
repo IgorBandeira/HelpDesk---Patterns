@@ -2,6 +2,7 @@
 using HelpDesk.Infrastructure.Collaboration.Models;
 using HelpDesk.Infrastructure.IdentityAccess.Models;
 using HelpDesk.Infrastructure.ServiceCatalog.Models;
+using HelpDesk.Infrastructure.Operations.Models;
 using HelpDesk.Infrastructure.Ticketing.Models;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,9 +1,10 @@
-﻿using HelpDesk.Application.Ticketing.Ports;
+﻿using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Infrastructure.Operations.Notifications.Templates;
+using HelpDesk.Infrastructure.Operations.Queries;
 using HelpDesk.Infrastructure.Ticketing.HostedServices;
-using HelpDesk.Infrastructure.Ticketing.Notifications.Templates;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace HelpDesk.Infrastructure.Notifications.DependencyInjection
+namespace HelpDesk.Infrastructure.Operations.DependencyInjection
 {
     public static class NotificationInfrastructureModule
     {

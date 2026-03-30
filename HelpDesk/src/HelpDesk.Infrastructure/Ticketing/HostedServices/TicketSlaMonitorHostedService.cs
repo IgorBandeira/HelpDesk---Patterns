@@ -1,4 +1,5 @@
 ﻿using HelpDesk.Application.Shared.Abstractions;
+using HelpDesk.Application.Operations.Ports;
 using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.Ticketing.Services;
 using Microsoft.Extensions.DependencyInjection;

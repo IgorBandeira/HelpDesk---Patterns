@@ -2,10 +2,12 @@
 using HelpDesk.Application.Collaboration.DTOs;
 using HelpDesk.Application.Shared.DTOs;
 using HelpDesk.Application.Ticketing.DTOs;
+using HelpDesk.Application.Operations.DTOs;
 using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Infrastructure.Attachments.Models;
 using HelpDesk.Infrastructure.Collaboration.Models;
 using HelpDesk.Infrastructure.Persistence;
+using HelpDesk.Infrastructure.Operations.Models;
 using HelpDesk.Infrastructure.Ticketing.Models;
 using Microsoft.EntityFrameworkCore;
 

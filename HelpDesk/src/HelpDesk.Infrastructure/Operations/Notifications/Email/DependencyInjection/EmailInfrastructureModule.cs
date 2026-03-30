@@ -3,7 +3,7 @@ using HelpDesk.Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace HelpDesk.Infrastructure.Notifications.Email.DependencyInjection
+namespace HelpDesk.Infrastructure.Operations.Notifications.Email.DependencyInjection
 {
     public static class EmailInfrastructureModule
     {

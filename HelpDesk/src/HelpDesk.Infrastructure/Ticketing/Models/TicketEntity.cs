@@ -1,6 +1,7 @@
 ﻿using HelpDesk.Infrastructure.Attachments.Models;
 using HelpDesk.Infrastructure.Collaboration.Models;
 using HelpDesk.Infrastructure.IdentityAccess.Models;
+using HelpDesk.Infrastructure.Operations.Models;
 using HelpDesk.Infrastructure.ServiceCatalog.Models;
 
 namespace HelpDesk.Infrastructure.Ticketing.Models

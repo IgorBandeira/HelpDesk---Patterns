@@ -1,8 +1,9 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
+using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.Application.Ticketing.DTOs;
-using HelpDesk.Application.Ticketing.Ports;
+using HelpDesk.Application.Operations.Ports;
 using HelpDesk.Domain.SharedKernel.Exceptions;
 
 namespace HelpDesk.Application.Ticketing.UseCases.ChangeStatus
