@@ -1,8 +1,9 @@
 ﻿using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Ticketing.ValueObjects
 {
-    public sealed class TicketDescription
+    public sealed class TicketDescription : ValueObject
     {
         public string Value { get; }
 
@@ -15,5 +16,10 @@ namespace HelpDesk.Domain.Ticketing.ValueObjects
 
             return new TicketDescription(value.Trim());
         }
+        
+            protected override IEnumerable<object?> GetEqualityComponents()
+            {
+                yield return Value;
+            }
     }
 }

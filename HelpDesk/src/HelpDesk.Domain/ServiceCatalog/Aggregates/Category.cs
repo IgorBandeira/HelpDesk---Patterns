@@ -5,7 +5,7 @@ namespace HelpDesk.Domain.ServiceCatalog.Aggregates;
 
 public sealed class Category : AggregateRoot<int>
 {
-    public CategoryName Name { get; private set; }
+    public CategoryName Name { get; private set; } = default!;
     public int? ParentId { get; private set; }
 
     private Category() { }

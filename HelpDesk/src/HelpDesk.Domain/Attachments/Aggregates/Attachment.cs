@@ -1,11 +1,11 @@
 ﻿using HelpDesk.Domain.Attachments.ValueObjects;
 using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Attachments.Aggregates
 {
-    public sealed class Attachment
+    public sealed class Attachment : AggregateRoot<int>
     {
-        public int Id { get; private set; }
         public int TicketId { get; private set; }
 
         public string FileName { get; private set; } = "";

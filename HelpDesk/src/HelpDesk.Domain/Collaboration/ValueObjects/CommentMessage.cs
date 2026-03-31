@@ -1,8 +1,9 @@
 ﻿using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Collaboration.ValueObjects
 {
-    public sealed class CommentMessage
+    public sealed class CommentMessage : ValueObject
     {
         public const int MaxChars = 4000;
         public string Value { get; }
@@ -20,6 +21,11 @@ namespace HelpDesk.Domain.Collaboration.ValueObjects
                 throw new DomainException($"Mensagem excede o limite de {MaxChars} caracteres (atual: {message.Length}).");
 
             return new CommentMessage(message);
+        }
+
+        protected override IEnumerable<object?> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 }

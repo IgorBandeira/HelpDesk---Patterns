@@ -1,8 +1,9 @@
 ﻿using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Ticketing.ValueObjects
 {
-    public sealed class TicketTitle
+    public sealed class TicketTitle : ValueObject
     {
         public const int MaxLength = 180;
         public string Value { get; }
@@ -20,6 +21,11 @@ namespace HelpDesk.Domain.Ticketing.ValueObjects
                 throw new DomainException($"Título excede o limite de {MaxLength} caracteres (atual: {v.Length}).");
 
             return new TicketTitle(v);
+        }
+
+        protected override IEnumerable<object?> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 }

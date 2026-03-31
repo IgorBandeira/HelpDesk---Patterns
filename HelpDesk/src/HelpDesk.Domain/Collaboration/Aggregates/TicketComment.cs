@@ -1,12 +1,12 @@
 ﻿using HelpDesk.Domain.Collaboration.Enums;
 using HelpDesk.Domain.Collaboration.ValueObjects;
 using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Collaboration.Aggregates
 {
-    public sealed class TicketComment
+    public sealed class TicketComment : AggregateRoot<int>
     {
-        public int Id { get; private set; }
         public int TicketId { get; private set; }
         public int AuthorId { get; private set; }
         public string Visibility { get; private set; }

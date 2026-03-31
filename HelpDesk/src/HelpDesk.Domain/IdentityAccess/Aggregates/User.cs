@@ -5,9 +5,9 @@ namespace HelpDesk.Domain.IdentityAccess.Aggregates
 {
     public sealed class User : AggregateRoot<int>
     {
-        public UserName Name { get; private set; }
-        public EmailAddress Email { get; private set; }
-        public UserRole Role { get; private set; }
+        public UserName Name { get; private set; } = default!;
+        public EmailAddress Email { get; private set; } = default!;
+        public UserRole Role { get; private set; } = default!;
 
         private User() { }
 

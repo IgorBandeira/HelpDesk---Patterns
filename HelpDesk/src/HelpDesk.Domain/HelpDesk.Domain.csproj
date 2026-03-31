@@ -7,9 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="ServiceCatalog\Entities\" />
-    <Folder Include="ServiceCatalog\DomainServices\" />
-    <Folder Include="ServiceCatalog\Events\" />
+    <Compile Remove="ServiceCatalog\DomainServices\**" />
+    <Compile Remove="ServiceCatalog\Entities\**" />
+    <EmbeddedResource Remove="ServiceCatalog\DomainServices\**" />
+    <EmbeddedResource Remove="ServiceCatalog\Entities\**" />
+    <None Remove="ServiceCatalog\DomainServices\**" />
+    <None Remove="ServiceCatalog\Entities\**" />
   </ItemGroup>
 
 </Project>

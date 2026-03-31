@@ -2,14 +2,14 @@
 using HelpDesk.Domain.Collaboration.Enums;
 using HelpDesk.Domain.Collaboration.ValueObjects;
 using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 using HelpDesk.Domain.Ticketing.Enums;
 using HelpDesk.Domain.Ticketing.ValueObjects;
 
 namespace HelpDesk.Domain.Ticketing.Aggregates
 {
-    public sealed class Ticket
+    public sealed class Ticket : AggregateRoot<int>
     {
-        public int Id { get; private set; }
         public TicketTitle Title { get; private set; }
         public TicketDescription Description { get; private set; }
         public string Status { get; private set; }

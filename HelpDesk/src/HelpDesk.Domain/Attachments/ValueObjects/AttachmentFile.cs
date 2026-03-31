@@ -1,9 +1,10 @@
 ﻿using HelpDesk.Domain.Attachments.Rules;
 using HelpDesk.Domain.SharedKernel.Exceptions;
+using HelpDesk.Domain.SharedKernel.Primitives;
 
 namespace HelpDesk.Domain.Attachments.ValueObjects
 {
-    public sealed class AttachmentFile
+    public sealed class AttachmentFile : ValueObject
     {
         public string FileName { get; }
         public string ContentType { get; }
@@ -29,6 +30,13 @@ namespace HelpDesk.Domain.Attachments.ValueObjects
                 : contentType!;
 
             return new AttachmentFile(fileName, ct, sizeBytes);
+        }
+
+        protected override IEnumerable<object?> GetEqualityComponents()
+        {
+            yield return FileName;
+            yield return ContentType;
+            yield return SizeBytes;
         }
     }
 }
