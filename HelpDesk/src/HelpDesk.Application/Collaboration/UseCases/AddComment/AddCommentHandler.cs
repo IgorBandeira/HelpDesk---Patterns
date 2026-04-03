@@ -18,11 +18,23 @@ namespace HelpDesk.Application.Collaboration.UseCases.AddComment
         private readonly ITicketReadPort _tickets;
         private readonly ICommentRepository _comments;
         private readonly IClock _clock;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
-        public AddCommentHandler(IUserReadPort users, ITicketReadPort tickets, ICommentRepository comments, IClock clock)
-            => (_users, _tickets, _comments, _clock) = (users, tickets, comments, clock);
+        public AddCommentHandler(
+            IUserReadPort users,
+            ITicketReadPort tickets,
+            ICommentRepository comments,
+            IClock clock,
+            IDomainEventDispatcher domainEventDispatcher)
+        {
+            _users = users;
+            _tickets = tickets;
+            _comments = comments;
+            _clock = clock;
+            _domainEventDispatcher = domainEventDispatcher;
+        }
 
-        public async Task<CommentResponseDto> HandleAsync(AddCommentCommand cmd)
+        public async Task<CommentResponseDto> HandleAsync(AddCommentCommand cmd, CancellationToken ct = default)
         {
             var user = await _users.GetByIdAsync(cmd.UserId);
             if (user is null)
@@ -56,14 +68,35 @@ namespace HelpDesk.Application.Collaboration.UseCases.AddComment
             {
                 var allowed = CollaborationRules.Participants(user.Id, user.Role, ticket.RequesterId, ticket.AssigneeId);
                 if (!allowed)
-                    throw new AppException(HttpStatusCodes.Forbidden,
+                {
+                    throw new AppException(
+                        HttpStatusCodes.Forbidden,
                         "Somente requester e assignee do chamado em questão ou manager podem criar comentários internos.");
+                }
             }
 
-            var comment = TicketComment.CreateNew(cmd.TicketId, cmd.UserId, visibility, message, _clock.Now);
+            var now = _clock.Now;
+
+            var comment = TicketComment.CreateNew(
+                cmd.TicketId,
+                cmd.UserId,
+                visibility,
+                message,
+                now);
+
+            comment.RaiseAddedEvent(user.Name, now);
+
             await _comments.AddAsync(comment);
 
-            return new CommentResponseDto(comment.Id, comment.AuthorId, comment.Visibility, comment.Message, comment.CreatedAt);
+            await _domainEventDispatcher.DispatchAsync(comment.DomainEvents, ct);
+            comment.ClearDomainEvents();
+
+            return new CommentResponseDto(
+                comment.Id,
+                comment.AuthorId,
+                comment.Visibility,
+                comment.Message,
+                comment.CreatedAt);
         }
     }
 }

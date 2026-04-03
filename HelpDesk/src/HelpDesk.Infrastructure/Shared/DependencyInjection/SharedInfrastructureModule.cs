@@ -1,4 +1,5 @@
 ﻿using HelpDesk.Application.Shared.Abstractions;
+using HelpDesk.Infrastructure.Shared.Clock;
 using HelpDesk.Infrastructure.Shared.DomainEvents;
 using Microsoft.Extensions.DependencyInjection;
 
