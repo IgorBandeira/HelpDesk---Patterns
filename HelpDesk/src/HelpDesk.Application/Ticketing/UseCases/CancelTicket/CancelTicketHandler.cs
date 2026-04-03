@@ -1,10 +1,9 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
-using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.Application.Ticketing.DTOs;
 using HelpDesk.Application.Ticketing.Internal;
-using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Domain.SharedKernel.Exceptions;
 
 namespace HelpDesk.Application.Ticketing.UseCases.CancelTicket
@@ -14,14 +13,15 @@ namespace HelpDesk.Application.Ticketing.UseCases.CancelTicket
         private readonly ITicketRepository _tickets;
         private readonly IUserReadPort _users;
         private readonly IClock _clock;
-        private readonly INotificationPort _notify;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
         public CancelTicketHandler(
             ITicketRepository tickets,
             IUserReadPort users,
             IClock clock,
-            INotificationPort notify)
-            => (_tickets, _users, _clock, _notify) = (tickets, users, clock, notify);
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _clock, _domainEventDispatcher) =
+               (tickets, users, clock, domainEventDispatcher);
 
         public async Task<CancelResponseDto> HandleAsync(CancelTicketCommand cmd, CancellationToken ct = default)
         {
@@ -46,6 +46,7 @@ namespace HelpDesk.Application.Ticketing.UseCases.CancelTicket
             try
             {
                 t.Cancel(user.Id, reason, now);
+                t.RaiseCanceledEvent(user.Id, user.Name, reason, now);
             }
             catch (DomainException ex)
             {
@@ -54,8 +55,8 @@ namespace HelpDesk.Application.Ticketing.UseCases.CancelTicket
 
             await _tickets.SaveAsync(t);
 
-            var msg = $"Chamado cancelado por {user.Name}.";
-            await _notify.NotifyTicketActionAsync(t.Id, msg, null, ct);
+            await _domainEventDispatcher.DispatchAsync(t.DomainEvents, ct);
+            t.ClearDomainEvents();
 
             return new CancelResponseDto(t.Id, previous, t.Status, t.ClosedAt!.Value, user.Id, reason);
         }

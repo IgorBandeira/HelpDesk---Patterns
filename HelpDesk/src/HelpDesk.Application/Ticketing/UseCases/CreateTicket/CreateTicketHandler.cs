@@ -1,14 +1,12 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
-using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.ServiceCatalog.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.Application.Ticketing.DTOs;
 using HelpDesk.Application.Ticketing.Internal;
-using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Domain.SharedKernel.Exceptions;
 using HelpDesk.Domain.Ticketing.Aggregates;
-using HelpDesk.Domain.Ticketing.Enums;
 using HelpDesk.Domain.Ticketing.ValueObjects;
 
 namespace HelpDesk.Application.Ticketing.UseCases.CreateTicket
@@ -19,16 +17,16 @@ namespace HelpDesk.Application.Ticketing.UseCases.CreateTicket
         private readonly IUserReadPort _users;
         private readonly ICategoryReadPort _categories;
         private readonly IClock _clock;
-        private readonly INotificationPort _notify;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
         public CreateTicketHandler(
             ITicketRepository tickets,
             IUserReadPort users,
             ICategoryReadPort categories,
             IClock clock,
-            INotificationPort notify)
-            => (_tickets, _users, _categories, _clock, _notify) =
-               (tickets, users, categories, clock, notify);
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _categories, _clock, _domainEventDispatcher) =
+               (tickets, users, categories, clock, domainEventDispatcher);
 
         public async Task<TicketResponseDto> HandleAsync(CreateTicketCommand cmd, CancellationToken ct = default)
         {
@@ -44,7 +42,7 @@ namespace HelpDesk.Application.Ticketing.UseCases.CreateTicket
 
             try
             {
-                TicketPriority.EnsureValid(cmd.Dto.Priority);
+                Domain.Ticketing.Enums.TicketPriority.EnsureValid(cmd.Dto.Priority);
                 title = TicketTitle.Create(cmd.Dto.Title);
                 desc = TicketDescription.Create(cmd.Dto.Description);
             }
@@ -69,10 +67,10 @@ namespace HelpDesk.Application.Ticketing.UseCases.CreateTicket
 
             await _tickets.AddAsync(t);
 
-            await _notify.NotifyTicketActionAsync(
-                t.Id,
-                $"Chamado criado por {user.Name}.",
-                ct: ct);
+            t.RaiseCreatedEvent(user.Id, user.Name, now);
+
+            await _domainEventDispatcher.DispatchAsync(t.DomainEvents, ct);
+            t.ClearDomainEvents();
 
             return new TicketResponseDto(
                 t.Id,

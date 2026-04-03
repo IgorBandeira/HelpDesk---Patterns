@@ -21,13 +21,14 @@ namespace HelpDesk.UnitTests.Ticketing.Application
 
             var repo = new InMemoryTicketRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var t = Ticket.CreateNew(TicketTitle.Create("T"), TicketDescription.Create("D"), TicketPriority.Media, 10, 1, clock.Now);
             repo.Seed(t);
 
-            t.AssignToAgent(agentId: 99, clock.Now.AddMinutes(1)); 
+            t.AssignToAgent(agentId: 99, clock.Now.AddMinutes(1));
 
-            var handler = new ChangeStatusHandler(repo, users, clock, notify: new FakeNotificationPort());
+            var handler = new ChangeStatusHandler(repo, users, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new ChangeStatusCommand(
                 Id: t.Id,

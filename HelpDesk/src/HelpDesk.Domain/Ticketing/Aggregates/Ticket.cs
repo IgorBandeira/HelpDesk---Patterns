@@ -4,21 +4,24 @@ using HelpDesk.Domain.Collaboration.ValueObjects;
 using HelpDesk.Domain.SharedKernel.Exceptions;
 using HelpDesk.Domain.SharedKernel.Primitives;
 using HelpDesk.Domain.Ticketing.Enums;
+using HelpDesk.Domain.Ticketing.Events;
 using HelpDesk.Domain.Ticketing.ValueObjects;
 
 namespace HelpDesk.Domain.Ticketing.Aggregates
 {
     public sealed class Ticket : AggregateRoot<int>
     {
-        public TicketTitle Title { get; private set; }
-        public TicketDescription Description { get; private set; }
-        public string Status { get; private set; }
-        public string Priority { get; private set; }
+        public TicketTitle Title { get; private set; } = default!;
+        public TicketDescription Description { get; private set; } = default!;
+        public string Status { get; private set; } = TicketStatus.Novo;
+        public string Priority { get; private set; } = TicketPriority.Media;
+
         public DateTime CreatedAt { get; private set; }
-        public DateTime SlaStartAt { get; private set; }
         public DateTime? AssignedAt { get; private set; }
         public DateTime? ClosedAt { get; private set; }
+        public DateTime SlaStartAt { get; private set; }
         public DateTime? SlaDueAt { get; private set; }
+
         public int RequesterId { get; private set; }
         public int? AssigneeId { get; private set; }
         public int CategoryId { get; private set; }
@@ -26,28 +29,35 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
         private readonly List<TicketComment> _comments = new();
         public IReadOnlyCollection<TicketComment> Comments => _comments.AsReadOnly();
 
+        private Ticket() { }
+
         private Ticket(
+            int id,
             TicketTitle title,
             TicketDescription description,
+            string status,
             string priority,
+            DateTime createdAt,
+            DateTime? assignedAt,
+            DateTime? closedAt,
+            DateTime slaStartAt,
+            DateTime? slaDueAt,
             int requesterId,
-            int categoryId,
-            DateTime now)
+            int? assigneeId,
+            int categoryId) : base(id)
         {
-            TicketPriority.EnsureValid(priority);
-
             Title = title;
             Description = description;
+            Status = status;
             Priority = priority;
-
+            CreatedAt = createdAt;
+            AssignedAt = assignedAt;
+            ClosedAt = closedAt;
+            SlaStartAt = slaStartAt;
+            SlaDueAt = slaDueAt;
             RequesterId = requesterId;
+            AssigneeId = assigneeId;
             CategoryId = categoryId;
-
-            Status = TicketStatus.Novo;
-
-            CreatedAt = now;
-            SlaStartAt = now;
-            SlaDueAt = now + TicketPriority.ToSla(priority);
         }
 
         public static Ticket CreateNew(
@@ -57,12 +67,23 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
             int requesterId,
             int categoryId,
             DateTime now)
-            => new(title, description, priority, requesterId, categoryId, now);
-
-        public void EnsureActive()
         {
-            if (Status is TicketStatus.Fechado or TicketStatus.Cancelado)
-                throw new DomainException("Chamado inativo.");
+            TicketPriority.EnsureValid(priority);
+
+            return new Ticket(
+                id: 0,
+                title: title,
+                description: description,
+                status: TicketStatus.Novo,
+                priority: priority,
+                createdAt: now,
+                assignedAt: null,
+                closedAt: null,
+                slaStartAt: now,
+                slaDueAt: CalculateSlaDueAt(priority, now),
+                requesterId: requesterId,
+                assigneeId: null,
+                categoryId: categoryId);
         }
 
         public bool Update(
@@ -72,36 +93,34 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
             int? newCategoryId,
             DateTime now)
         {
-            EnsureActive();
+            EnsureIsActiveForEditing();
 
             var changed = false;
 
-            if (newTitle != null && !string.Equals(Title.Value, newTitle.Value, StringComparison.Ordinal))
+            if (newTitle is not null && !Title.Equals(newTitle))
             {
                 Title = newTitle;
                 changed = true;
             }
 
-            if (newDescription != null && !string.Equals(Description.Value, newDescription.Value, StringComparison.Ordinal))
+            if (newDescription is not null && !Description.Equals(newDescription))
             {
                 Description = newDescription;
                 changed = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(newPriority))
+            if (!string.IsNullOrWhiteSpace(newPriority) &&
+                !string.Equals(Priority, newPriority, StringComparison.OrdinalIgnoreCase))
             {
                 TicketPriority.EnsureValid(newPriority);
 
-                if (!string.Equals(Priority, newPriority, StringComparison.OrdinalIgnoreCase))
-                {
-                    Priority = newPriority;
-                    SlaStartAt = now;
-                    SlaDueAt = now + TicketPriority.ToSla(newPriority);
-                    changed = true;
-                }
+                Priority = newPriority;
+                SlaStartAt = now;
+                SlaDueAt = CalculateSlaDueAt(newPriority, now);
+                changed = true;
             }
 
-            if (newCategoryId.HasValue && newCategoryId.Value != CategoryId)
+            if (newCategoryId.HasValue && CategoryId != newCategoryId.Value)
             {
                 CategoryId = newCategoryId.Value;
                 changed = true;
@@ -112,7 +131,10 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
 
         public void AssignToAgent(int agentId, DateTime now)
         {
-            EnsureActive();
+            if (agentId <= 0)
+                throw new DomainException("Agent inválido.");
+
+            EnsureIsActiveForAssignment();
 
             AssigneeId = agentId;
             AssignedAt = now;
@@ -123,7 +145,11 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
 
         public void ChangeRequester(int requesterId)
         {
-            EnsureActive();
+            if (requesterId <= 0)
+                throw new DomainException("Requester inválido.");
+
+            EnsureIsActiveForRequest();
+
             RequesterId = requesterId;
         }
 
@@ -173,19 +199,40 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
                 ClosedAt = now;
         }
 
+
+        public void Cancel(int actorUserId, string reason, DateTime now)
+        {
+            if (actorUserId <= 0)
+                throw new DomainException("Usuário inválido.");
+
+            if (string.IsNullOrWhiteSpace(reason))
+                throw new DomainException("O motivo do cancelamento é obrigatório.");
+
+            if (Status is not (TicketStatus.Novo or TicketStatus.EmAnalise))
+                throw new DomainException("Só é possível cancelar chamados em Novo ou Em Análise.");
+
+            Status = TicketStatus.Cancelado;
+            ClosedAt = now;
+
+            AddComment(
+                actorUserId,
+                CommentVisibility.Internal,
+                $"Chamado cancelado: {reason.Trim()}",
+                now);
+        }
+
         public void Reopen(string reason, DateTime now)
         {
-            if (Status is not (TicketStatus.Resolvido or TicketStatus.Fechado))
-                throw new DomainException("Só reabre chamado se estiver Resolvido ou Fechado.");
-
             if (string.IsNullOrWhiteSpace(reason))
                 throw new DomainException("O motivo da reabertura é obrigatório.");
 
+            if (Status is not (TicketStatus.Resolvido or TicketStatus.Fechado))
+                throw new DomainException("Só reabre chamado se estiver Resolvido ou Fechado.");
+
             Status = TicketStatus.EmAnalise;
             ClosedAt = null;
-
             SlaStartAt = now;
-            SlaDueAt = now + TicketPriority.ToSla(Priority);
+            SlaDueAt = CalculateSlaDueAt(Priority, now);
 
             AddComment(
                 RequesterId,
@@ -194,22 +241,102 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
                 now);
         }
 
-        public void Cancel(int authorId, string reason, DateTime now)
+        public void RaiseCreatedEvent(int requesterId, string requesterName, DateTime now)
         {
-            if (Status is not TicketStatus.Novo and not TicketStatus.EmAnalise)
-                throw new DomainException("Só cancela se Novo/Em Análise.");
+            Raise(TicketCreatedDomainEvent.Create(
+                ticketId: Id,
+                requesterId: requesterId,
+                requesterName: requesterName,
+                occurredAt: now));
+        }
 
-            if (string.IsNullOrWhiteSpace(reason))
-                throw new DomainException("O motivo do cancelamento é obrigatório.");
+        public void RaiseAssignedEvent(int agentId, string agentName, string performedByUserName, DateTime now)
+        {
+            Raise(TicketAssignedDomainEvent.Create(
+                ticketId: Id,
+                agentId: agentId,
+                agentName: agentName,
+                performedByUserName: performedByUserName,
+                occurredAt: now));
+        }
 
-            Status = TicketStatus.Cancelado;
-            ClosedAt = now;
+        public void RaiseRequesterChangedEvent(
+            int requesterId,
+            string requesterName,
+            string performedByUserName,
+            string? requesterEmail,
+            DateTime now)
+        {
+            Raise(TicketRequesterChangedDomainEvent.Create(
+                ticketId: Id,
+                requesterId: requesterId,
+                requesterName: requesterName,
+                performedByUserName: performedByUserName,
+                requesterEmail: requesterEmail,
+                occurredAt: now));
+        }
 
-            AddComment(
-                authorId,
-                CommentVisibility.Internal,
-                $"Chamado cancelado: {reason.Trim()}",
-                now);
+        public void RaiseStatusChangedEvent(
+            string previousStatus,
+            string newStatus,
+            string performedByUserName,
+            DateTime now)
+        {
+            Raise(TicketStatusChangedDomainEvent.Create(
+                ticketId: Id,
+                previousStatus: previousStatus,
+                newStatus: newStatus,
+                performedByUserName: performedByUserName,
+                occurredAt: now));
+        }
+
+        public void RaiseCanceledEvent(int actorUserId, string actorUserName, string reason, DateTime now)
+        {
+            Raise(TicketCanceledDomainEvent.Create(
+                ticketId: Id,
+                actorUserId: actorUserId,
+                actorUserName: actorUserName,
+                reason: reason,
+                occurredAt: now));
+        }
+
+        public void RaiseReopenedEvent(int actorUserId, string actorUserName, string reason, DateTime now)
+        {
+            Raise(TicketReopenedDomainEvent.Create(
+                ticketId: Id,
+                actorUserId: actorUserId,
+                actorUserName: actorUserName,
+                reason: reason,
+                occurredAt: now));
+        }
+
+        public void RaiseUpdatedEvent(IReadOnlyList<TicketUpdatedChange> changes, DateTime now)
+        {
+            if (changes.Count == 0)
+                return;
+
+            Raise(TicketUpdatedDomainEvent.Create(
+                ticketId: Id,
+                changes: changes,
+                occurredAt: now));
+        }
+
+        private void EnsureIsActiveForEditing()
+        {
+            if (Status is TicketStatus.Fechado or TicketStatus.Cancelado)
+                throw new DomainException("Não é possível editar chamados inativos.");
+        }
+
+        private void EnsureIsActiveForAssignment()
+        {
+            if (Status is TicketStatus.Fechado or TicketStatus.Cancelado)
+                throw new DomainException("Não é possível atribuir chamados inativos.");
+        }
+
+        private void EnsureIsActiveForRequest()
+        {
+            if (Status is TicketStatus.Fechado or TicketStatus.Cancelado)
+                throw new DomainException("Não é possível alterar o requester de chamados inativos.");
         }
 
         private void AddComment(int authorId, string visibility, string message, DateTime now)
@@ -222,6 +349,20 @@ namespace HelpDesk.Domain.Ticketing.Aggregates
                 now);
 
             _comments.Add(comment);
+        }
+
+        private static DateTime? CalculateSlaDueAt(string priority, DateTime now)
+        {
+            TicketPriority.EnsureValid(priority);
+
+            return priority switch
+            {
+                TicketPriority.Baixa => now.AddHours(72),
+                TicketPriority.Media => now.AddHours(48),
+                TicketPriority.Alta => now.AddHours(24),
+                TicketPriority.Critica => now.AddHours(8),
+                _ => null
+            };
         }
     }
 }

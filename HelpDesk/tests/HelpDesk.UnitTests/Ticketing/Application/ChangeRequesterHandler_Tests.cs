@@ -21,11 +21,12 @@ namespace HelpDesk.UnitTests.Ticketing.Application
 
             var repo = new InMemoryTicketRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var t = Ticket.CreateNew(TicketTitle.Create("T"), TicketDescription.Create("D"), TicketPriority.Media, 10, 1, clock.Now);
             repo.Seed(t);
 
-            var handler = new ChangeRequesterHandler(repo, users, clock, notify: new FakeNotificationPort());
+            var handler = new ChangeRequesterHandler(repo, users, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new ChangeRequesterCommand(
                 Id: t.Id,

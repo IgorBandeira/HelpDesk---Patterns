@@ -1,13 +1,13 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
-using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.ServiceCatalog.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
+using HelpDesk.Domain.Ticketing.Enums;
 using HelpDesk.Application.Ticketing.DTOs;
 using HelpDesk.Application.Ticketing.Internal;
-using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Domain.SharedKernel.Exceptions;
-using HelpDesk.Domain.Ticketing.Enums;
+using HelpDesk.Domain.Ticketing.Events;
 using HelpDesk.Domain.Ticketing.ValueObjects;
 
 namespace HelpDesk.Application.Ticketing.UseCases.UpdateTicket
@@ -18,16 +18,16 @@ namespace HelpDesk.Application.Ticketing.UseCases.UpdateTicket
         private readonly IUserReadPort _users;
         private readonly ICategoryReadPort _categories;
         private readonly IClock _clock;
-        private readonly INotificationPort _notify;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
         public UpdateTicketHandler(
             ITicketRepository tickets,
             IUserReadPort users,
             ICategoryReadPort categories,
             IClock clock,
-            INotificationPort notify)
-            => (_tickets, _users, _categories, _clock, _notify) =
-               (tickets, users, categories, clock, notify);
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _categories, _clock, _domainEventDispatcher) =
+               (tickets, users, categories, clock, domainEventDispatcher);
 
         public async Task<TicketResponseDto> HandleAsync(UpdateTicketCommand cmd, CancellationToken ct = default)
         {
@@ -117,12 +117,16 @@ namespace HelpDesk.Application.Ticketing.UseCases.UpdateTicket
                 oldCategoryName: oldCategoryName,
                 newCategoryName: newCategoryName);
 
+            var changes = actions
+                .Select(x => new TicketUpdatedChange(x))
+                .ToList();
+
+            t.RaiseUpdatedEvent(changes, now);
+
             await _tickets.SaveAsync(t);
 
-            foreach (var action in actions)
-            {
-                await _notify.NotifyTicketActionAsync(t.Id, action, null, ct);
-            }
+            await _domainEventDispatcher.DispatchAsync(t.DomainEvents, ct);
+            t.ClearDomainEvents();
 
             return new TicketResponseDto(
                 t.Id,

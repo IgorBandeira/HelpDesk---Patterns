@@ -1,5 +1,4 @@
-﻿using HelpDesk.Infrastructure.Collaboration.Models;
-using HelpDesk.Infrastructure.Ticketing.Models;
+﻿using HelpDesk.Infrastructure.Ticketing.Models;
 
 namespace HelpDesk.Infrastructure.IdentityAccess.Models
 {

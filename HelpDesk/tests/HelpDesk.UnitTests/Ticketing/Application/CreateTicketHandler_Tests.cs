@@ -21,8 +21,9 @@ namespace HelpDesk.UnitTests.Ticketing.Application
 
             var repo = new InMemoryTicketRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new CreateTicketHandler(repo, users, cats, clock, notify: new FakeNotificationPort());
+            var handler = new CreateTicketHandler(repo, users, cats, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new CreateTicketCommand(
                 UserId: 10,
@@ -42,8 +43,9 @@ namespace HelpDesk.UnitTests.Ticketing.Application
             var cats = new InMemoryCategoryReadPort();
             var repo = new InMemoryTicketRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new CreateTicketHandler(repo, users, cats, clock, notify: new FakeNotificationPort());
+            var handler = new CreateTicketHandler(repo, users, cats, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new CreateTicketCommand(
                 UserId: 10,

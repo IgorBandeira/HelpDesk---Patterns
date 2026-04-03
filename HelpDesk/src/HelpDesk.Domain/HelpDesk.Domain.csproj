@@ -6,13 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ServiceCatalog\DomainServices\**" />
-    <Compile Remove="ServiceCatalog\Entities\**" />
-    <EmbeddedResource Remove="ServiceCatalog\DomainServices\**" />
-    <EmbeddedResource Remove="ServiceCatalog\Entities\**" />
-    <None Remove="ServiceCatalog\DomainServices\**" />
-    <None Remove="ServiceCatalog\Entities\**" />
-  </ItemGroup>
-
 </Project>

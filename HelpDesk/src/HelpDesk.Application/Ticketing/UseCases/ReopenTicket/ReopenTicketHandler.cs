@@ -1,10 +1,9 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
-using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.Application.Ticketing.DTOs;
 using HelpDesk.Application.Ticketing.Internal;
-using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Application.Ticketing.Ports;
 
 namespace HelpDesk.Application.Ticketing.UseCases.ReopenTicket
 {
@@ -13,10 +12,15 @@ namespace HelpDesk.Application.Ticketing.UseCases.ReopenTicket
         private readonly ITicketRepository _tickets;
         private readonly IUserReadPort _users;
         private readonly IClock _clock;
-        private readonly INotificationPort _notify;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
-        public ReopenTicketHandler(ITicketRepository tickets, IUserReadPort users, IClock clock, INotificationPort notify)
-            => (_tickets, _users, _clock, _notify) = (tickets, users, clock, notify);
+        public ReopenTicketHandler(
+            ITicketRepository tickets,
+            IUserReadPort users,
+            IClock clock,
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _clock, _domainEventDispatcher) =
+               (tickets, users, clock, domainEventDispatcher);
 
         public async Task<ReopenResponseDto> HandleAsync(ReopenTicketCommand cmd, CancellationToken ct = default)
         {
@@ -42,11 +46,12 @@ namespace HelpDesk.Application.Ticketing.UseCases.ReopenTicket
             var now = _clock.Now;
 
             t.Reopen(reason, now);
+            t.RaiseReopenedEvent(user.Id, user.Name, reason, now);
 
             await _tickets.SaveAsync(t);
 
-            var msg = $"Chamado reaberto por {user.Name}.";
-            await _notify.NotifyTicketActionAsync(t.Id, msg, null, ct);
+            await _domainEventDispatcher.DispatchAsync(t.DomainEvents, ct);
+            t.ClearDomainEvents();
 
             return new ReopenResponseDto(t.Id, previous, t.Status, now, user.Id, reason);
         }

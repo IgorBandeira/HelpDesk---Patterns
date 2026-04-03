@@ -21,6 +21,7 @@ namespace HelpDesk.UnitTests.Ticketing.Application
 
             var repo = new InMemoryTicketRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var t = Ticket.CreateNew(TicketTitle.Create("T"), TicketDescription.Create("D"), TicketPriority.Media, 10, 1, clock.Now);
             repo.Seed(t);
@@ -30,7 +31,7 @@ namespace HelpDesk.UnitTests.Ticketing.Application
             t.ChangeStatus(TicketStatus.Resolvido, 99, clock.Now.AddMinutes(3));
             t.ChangeStatus(TicketStatus.Fechado, 10, clock.Now.AddMinutes(4));
 
-            var handler = new ReopenTicketHandler(repo, users, clock, notify: new FakeNotificationPort());
+            var handler = new ReopenTicketHandler(repo, users, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new ReopenTicketCommand(
                 Id: t.Id,

@@ -1,10 +1,10 @@
 ﻿using HelpDesk.Application.IdentityAccess.Ports;
-using HelpDesk.Application.Ticketing.Ports;
 using HelpDesk.Application.Shared.Abstractions;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.Application.Ticketing.DTOs;
 using HelpDesk.Application.Ticketing.Internal;
-using HelpDesk.Application.Operations.Ports;
+using HelpDesk.Application.Ticketing.Ports;
+using HelpDesk.Domain.SharedKernel.Exceptions;
 using HelpDesk.Domain.Ticketing.Enums;
 
 namespace HelpDesk.Application.Ticketing.UseCases.ChangeRequester
@@ -14,10 +14,15 @@ namespace HelpDesk.Application.Ticketing.UseCases.ChangeRequester
         private readonly ITicketRepository _tickets;
         private readonly IUserReadPort _users;
         private readonly IClock _clock;
-        private readonly INotificationPort _notify;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
-        public ChangeRequesterHandler(ITicketRepository tickets, IUserReadPort users, IClock clock, INotificationPort notify)
-            => (_tickets, _users, _clock, _notify) = (tickets, users, clock, notify);
+        public ChangeRequesterHandler(
+            ITicketRepository tickets,
+            IUserReadPort users,
+            IClock clock,
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _clock, _domainEventDispatcher) =
+               (tickets, users, clock, domainEventDispatcher);
 
         public async Task<RequesterResponseDto> HandleAsync(ChangeRequesterCommand cmd, CancellationToken ct = default)
         {
@@ -29,9 +34,6 @@ namespace HelpDesk.Application.Ticketing.UseCases.ChangeRequester
             if (t is null)
                 throw new AppException(HttpStatusCodes.NotFound, "Chamado não encontrado.");
 
-            if (t.Status is TicketStatus.Fechado or TicketStatus.Cancelado)
-                throw new AppException(HttpStatusCodes.BadRequest, "Não é possível atribuir chamados inativos.");
-
             if (!TicketAuthRules.Owner(user, t))
                 throw new AppException(HttpStatusCodes.Forbidden, "Somente o solicitante do chamado ou um Manager pode atribuir este chamado a outro responsável.");
 
@@ -42,12 +44,28 @@ namespace HelpDesk.Application.Ticketing.UseCases.ChangeRequester
             if (!TicketAuthRules.IsRequester(requester))
                 throw new AppException(HttpStatusCodes.BadRequest, $"Usuário '{requester.Name}' não é um Requester e não pode ser atribuído a este chamado.");
 
-            t.ChangeRequester(requester.Id);
+            var now = _clock.Now;
+
+            try
+            {
+                t.ChangeRequester(requester.Id);
+            }
+            catch (DomainException ex)
+            {
+                throw new AppException(HttpStatusCodes.BadRequest, ex.Message);
+            }
+
+            t.RaiseRequesterChangedEvent(
+                requester.Id,
+                requester.Name,
+                user.Name,
+                requester.Email,
+                now);
 
             await _tickets.SaveAsync(t);
 
-            var msg = $"{user.Name} mudou requester para {requester.Name}.";
-            await _notify.NotifyTicketActionAsync(t.Id, msg, extraEmail: requester.Email, ct: ct);
+            await _domainEventDispatcher.DispatchAsync(t.DomainEvents, ct);
+            t.ClearDomainEvents();
 
             return new RequesterResponseDto(t.Id, t.Status, requester.Id, requester.Name);
         }
