@@ -18,17 +18,19 @@ namespace HelpDesk.Application.Attachments.UseCases.UploadAttachment
         private readonly IAttachmentRepository _attachments;
         private readonly IFileStoragePort _storage;
         private readonly IClock _clock;
+        private readonly IDomainEventDispatcher _domainEventDispatcher;
 
         public UploadAttachmentHandler(
             ITicketReadPort tickets,
             IUserReadPort users,
             IAttachmentRepository attachments,
             IFileStoragePort storage,
-            IClock clock)
-            => (_tickets, _users, _attachments, _storage, _clock) =
-               (tickets, users, attachments, storage, clock);
+            IClock clock,
+            IDomainEventDispatcher domainEventDispatcher)
+            => (_tickets, _users, _attachments, _storage, _clock, _domainEventDispatcher) =
+               (tickets, users, attachments, storage, clock, domainEventDispatcher);
 
-        public async Task<AttachmentResponseDto> HandleAsync(UploadAttachmentCommand cmd)
+        public async Task<AttachmentResponseDto> HandleAsync(UploadAttachmentCommand cmd, CancellationToken ct = default)
         {
             AttachmentFile fileVo;
             try
@@ -55,7 +57,6 @@ namespace HelpDesk.Application.Attachments.UseCases.UploadAttachment
                 throw new AppException(HttpStatusCodes.BadRequest, "Usuário inválido ou não informado.");
 
             var key = $"{cmd.TicketId}/{fileVo.FileName}";
-
             var (storedKey, url) = await _storage.SaveAsync(cmd.File, key);
 
             StorageKey storageKey;
@@ -79,6 +80,13 @@ namespace HelpDesk.Application.Attachments.UseCases.UploadAttachment
                 now);
 
             await _attachments.AddAsync(att);
+
+            var actorUserName = string.IsNullOrWhiteSpace(user.Name) ? "(autor removido)" : user.Name;
+
+            att.RaiseAddedEvent(actorUserName, now);
+
+            await _domainEventDispatcher.DispatchAsync(att.DomainEvents, ct);
+            att.ClearDomainEvents();
 
             return new AttachmentResponseDto(
                 att.Id,

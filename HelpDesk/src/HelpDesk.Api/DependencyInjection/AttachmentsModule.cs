@@ -2,6 +2,9 @@
 using HelpDesk.Application.Attachments.UseCases.GetAttachmentById;
 using HelpDesk.Application.Attachments.UseCases.ListAttachments;
 using HelpDesk.Application.Attachments.UseCases.UploadAttachment;
+using HelpDesk.Application.Operations.EventHandlers;
+using HelpDesk.Application.Shared.Abstractions;
+using HelpDesk.Domain.Attachments.Events;
 
 namespace HelpDesk.Api.DependencyInjection
 {
@@ -13,6 +16,9 @@ namespace HelpDesk.Api.DependencyInjection
             services.AddScoped<ListAttachmentsHandler>();
             services.AddScoped<GetAttachmentByIdHandler>();
             services.AddScoped<DeleteAttachmentHandler>();
+
+            services.AddScoped<IDomainEventHandler<AttachmentUploadedDomainEvent>, AttachmentUploadedDomainEventHandler>();
+            services.AddScoped<IDomainEventHandler<AttachmentDeletedDomainEvent>, AttachmentDeletedDomainEventHandler>();
 
             return services;
         }
