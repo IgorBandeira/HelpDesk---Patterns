@@ -12,6 +12,7 @@ namespace HelpDesk.Infrastructure.Operations.DependencyInjection
         {
             services.AddScoped<TicketEmailTemplateBuilder>();
             services.AddScoped<UserEmailTemplateBuilder>();
+            services.AddScoped<CategoryEmailTemplateBuilder>();
             services.AddScoped<INotificationPort, NotificationPort>();
             services.AddHostedService<TicketSlaMonitorHostedService>();
 

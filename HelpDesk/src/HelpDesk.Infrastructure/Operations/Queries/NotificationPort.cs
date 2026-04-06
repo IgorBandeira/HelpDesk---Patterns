@@ -17,6 +17,7 @@ namespace HelpDesk.Infrastructure.Operations.Queries
         private readonly IEmailSender _email;
         private readonly TicketEmailTemplateBuilder _ticketTemplateBuilder;
         private readonly UserEmailTemplateBuilder _userTemplateBuilder;
+        private readonly CategoryEmailTemplateBuilder _categoryTemplateBuilder;
 
         public NotificationPort(
             AppDbContext db,
@@ -24,7 +25,8 @@ namespace HelpDesk.Infrastructure.Operations.Queries
             ILogger<NotificationPort> logger,
             IEmailSender email,
             TicketEmailTemplateBuilder ticketTemplateBuilder,
-            UserEmailTemplateBuilder userTemplateBuilder)
+            UserEmailTemplateBuilder userTemplateBuilder,
+            CategoryEmailTemplateBuilder categoryTemplateBuilder)
         {
             _db = db;
             _clock = clock;
@@ -32,6 +34,7 @@ namespace HelpDesk.Infrastructure.Operations.Queries
             _email = email;
             _ticketTemplateBuilder = ticketTemplateBuilder;
             _userTemplateBuilder = userTemplateBuilder;
+            _categoryTemplateBuilder = categoryTemplateBuilder;
         }
 
         public async Task NotifyTicketActionAsync(
@@ -87,10 +90,11 @@ namespace HelpDesk.Infrastructure.Operations.Queries
 
             var emails = await GetTicketParticipantEmailsAsync(ticket.Id, ct);
 
-             _logger.LogInformation(
+            _logger.LogInformation(
                 "Ticket #{Id} destinatários SLA: {Emails}",
                 ticket.Id,
                 emails.Count == 0 ? "(nenhum)" : string.Join(", ", emails));
+
             if (emails.Count == 0)
                 return;
 
@@ -131,6 +135,8 @@ namespace HelpDesk.Infrastructure.Operations.Queries
                 "UserCreated" => BuildUserCreatedNotification(data),
                 "UserUpdated" => BuildUserUpdatedNotification(data),
                 "UserDeleted" => BuildUserDeletedNotification(data),
+                "CategoryCreated" => BuildCategoryCreatedNotification(data),
+                "CategoryDeleted" => BuildCategoryDeletedNotification(data),
                 _ => throw new InvalidOperationException($"Tipo de notificação para managers não suportado: {eventType}")
             };
         }
@@ -176,6 +182,34 @@ namespace HelpDesk.Infrastructure.Operations.Queries
                 data["Name"],
                 data["Email"],
                 data["Role"],
+                data["ActorUserName"],
+                DateTime.Parse(data["OccurredAt"]));
+
+            return (subject, html);
+        }
+
+        private (string Subject, string Html) BuildCategoryCreatedNotification(IReadOnlyDictionary<string, string> data)
+        {
+            var categoryId = int.Parse(data["CategoryId"]);
+            var subject = _categoryTemplateBuilder.BuildCreatedSubject(categoryId);
+            var html = _categoryTemplateBuilder.BuildCreatedEmail(
+                categoryId,
+                data["Name"],
+                GetValueOrEmpty(data, "ParentName"),
+                data["ActorUserName"],
+                DateTime.Parse(data["OccurredAt"]));
+
+            return (subject, html);
+        }
+
+        private (string Subject, string Html) BuildCategoryDeletedNotification(IReadOnlyDictionary<string, string> data)
+        {
+            var categoryId = int.Parse(data["CategoryId"]);
+            var subject = _categoryTemplateBuilder.BuildDeletedSubject(categoryId);
+            var html = _categoryTemplateBuilder.BuildDeletedEmail(
+                categoryId,
+                data["Name"],
+                GetValueOrEmpty(data, "ParentName"),
                 data["ActorUserName"],
                 DateTime.Parse(data["OccurredAt"]));
 
@@ -251,6 +285,13 @@ namespace HelpDesk.Infrastructure.Operations.Queries
                 .Where(c => c.Id == categoryId.Value)
                 .Select(c => c.Name)
                 .FirstOrDefaultAsync(ct);
+        }
+
+        private static string GetValueOrEmpty(IReadOnlyDictionary<string, string> data, string key)
+        {
+            return data.TryGetValue(key, out var value)
+                ? value
+                : string.Empty;
         }
     }
 }
