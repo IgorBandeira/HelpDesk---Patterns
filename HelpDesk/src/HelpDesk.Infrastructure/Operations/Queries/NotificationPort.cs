@@ -15,20 +15,23 @@ namespace HelpDesk.Infrastructure.Operations.Queries
         private readonly IClock _clock;
         private readonly ILogger<NotificationPort> _logger;
         private readonly IEmailSender _email;
-        private readonly TicketEmailTemplateBuilder _templateBuilder;
+        private readonly TicketEmailTemplateBuilder _ticketTemplateBuilder;
+        private readonly UserEmailTemplateBuilder _userTemplateBuilder;
 
         public NotificationPort(
             AppDbContext db,
             IClock clock,
             ILogger<NotificationPort> logger,
             IEmailSender email,
-            TicketEmailTemplateBuilder templateBuilder)
+            TicketEmailTemplateBuilder ticketTemplateBuilder,
+            UserEmailTemplateBuilder userTemplateBuilder)
         {
             _db = db;
             _clock = clock;
             _logger = logger;
             _email = email;
-            _templateBuilder = templateBuilder;
+            _ticketTemplateBuilder = ticketTemplateBuilder;
+            _userTemplateBuilder = userTemplateBuilder;
         }
 
         public async Task NotifyTicketActionAsync(
@@ -62,12 +65,10 @@ namespace HelpDesk.Infrastructure.Operations.Queries
                 ? null
                 : await GetCategoryNameAsync(ticket.CategoryId, ct);
 
-            var subject = _templateBuilder.BuildActionSubject(ticketId, description);
-            var html = _templateBuilder.BuildActionEmail(ticketId, description, ticket, categoryName);
+            var subject = _ticketTemplateBuilder.BuildActionSubject(ticketId, description);
+            var html = _ticketTemplateBuilder.BuildActionEmail(ticketId, description, ticket, categoryName);
 
-            await _email.SendAsync(
-                new EmailMessage(emails, subject, html),
-                ct);
+            await _email.SendAsync(new EmailMessage(emails, subject, html), ct);
         }
 
         public async Task NotifySlaAlertAsync(int ticketId, CancellationToken ct = default)
@@ -86,22 +87,99 @@ namespace HelpDesk.Infrastructure.Operations.Queries
 
             var emails = await GetTicketParticipantEmailsAsync(ticket.Id, ct);
 
-            _logger.LogInformation(
+             _logger.LogInformation(
                 "Ticket #{Id} destinatários SLA: {Emails}",
                 ticket.Id,
                 emails.Count == 0 ? "(nenhum)" : string.Join(", ", emails));
-
             if (emails.Count == 0)
                 return;
 
             var categoryName = await GetCategoryNameAsync(ticket.CategoryId, ct);
 
-            var subject = _templateBuilder.BuildSlaAlertSubject(ticket.Id);
-            var html = _templateBuilder.BuildSlaAlertEmail(ticket, categoryName);
+            var subject = _ticketTemplateBuilder.BuildSlaAlertSubject(ticket.Id);
+            var html = _ticketTemplateBuilder.BuildSlaAlertEmail(ticket, categoryName);
 
-            await _email.SendAsync(
-                new EmailMessage(emails, subject, html),
-                ct);
+            await _email.SendAsync(new EmailMessage(emails, subject, html), ct);
+        }
+
+        public async Task NotifyManagersAsync(
+            string eventType,
+            IReadOnlyDictionary<string, string> data,
+            CancellationToken ct = default)
+        {
+            var emails = await GetManagerEmailsAsync(ct);
+            if (emails.Count == 0)
+                return;
+
+            var (subject, html) = BuildManagerNotification(eventType, data);
+
+            _logger.LogInformation(
+                "Notificação para managers. Tipo: {EventType}. Assunto: {Subject}. Destinatários: {Emails}",
+                eventType,
+                subject,
+                string.Join(", ", emails));
+
+            await _email.SendAsync(new EmailMessage(emails, subject, html), ct);
+        }
+
+        private (string Subject, string Html) BuildManagerNotification(
+            string eventType,
+            IReadOnlyDictionary<string, string> data)
+        {
+            return eventType switch
+            {
+                "UserCreated" => BuildUserCreatedNotification(data),
+                "UserUpdated" => BuildUserUpdatedNotification(data),
+                "UserDeleted" => BuildUserDeletedNotification(data),
+                _ => throw new InvalidOperationException($"Tipo de notificação para managers não suportado: {eventType}")
+            };
+        }
+
+        private (string Subject, string Html) BuildUserCreatedNotification(IReadOnlyDictionary<string, string> data)
+        {
+            var userId = int.Parse(data["UserId"]);
+            var subject = _userTemplateBuilder.BuildCreatedSubject(userId);
+            var html = _userTemplateBuilder.BuildCreatedEmail(
+                userId,
+                data["Name"],
+                data["Email"],
+                data["Role"],
+                data["ActorUserName"],
+                DateTime.Parse(data["OccurredAt"]));
+
+            return (subject, html);
+        }
+
+        private (string Subject, string Html) BuildUserUpdatedNotification(IReadOnlyDictionary<string, string> data)
+        {
+            var userId = int.Parse(data["UserId"]);
+            var changes = data["Changes"]
+                .Split("||", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
+            var subject = _userTemplateBuilder.BuildUpdatedSubject(userId);
+            var html = _userTemplateBuilder.BuildUpdatedEmail(
+                userId,
+                data["ActorUserName"],
+                changes,
+                DateTime.Parse(data["OccurredAt"]));
+
+            return (subject, html);
+        }
+
+        private (string Subject, string Html) BuildUserDeletedNotification(IReadOnlyDictionary<string, string> data)
+        {
+            var userId = int.Parse(data["UserId"]);
+            var subject = _userTemplateBuilder.BuildDeletedSubject(userId);
+            var html = _userTemplateBuilder.BuildDeletedEmail(
+                userId,
+                data["Name"],
+                data["Email"],
+                data["Role"],
+                data["ActorUserName"],
+                DateTime.Parse(data["OccurredAt"]));
+
+            return (subject, html);
         }
 
         private async Task SaveTicketActionAsync(int ticketId, string description, CancellationToken ct)
@@ -150,6 +228,17 @@ namespace HelpDesk.Infrastructure.Operations.Queries
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList()!;
+        }
+
+        private async Task<List<string>> GetManagerEmailsAsync(CancellationToken ct)
+        {
+            return await _db.Users
+                .AsNoTracking()
+                .Where(x => x.Role == "Manager")
+                .Select(x => x.Email)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToListAsync(ct);
         }
 
         private async Task<string?> GetCategoryNameAsync(int? categoryId, CancellationToken ct)

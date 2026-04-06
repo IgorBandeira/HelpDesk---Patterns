@@ -11,5 +11,10 @@ namespace HelpDesk.Application.Operations.Ports
         Task NotifySlaAlertAsync(
             int ticketId,
             CancellationToken ct = default);
+
+        Task NotifyManagersAsync(
+            string eventType,
+            IReadOnlyDictionary<string, string> data,
+            CancellationToken ct = default);
     }
 }

@@ -11,6 +11,7 @@ namespace HelpDesk.Infrastructure.Operations.DependencyInjection
         public static IServiceCollection AddNotificationInfrastructure(this IServiceCollection services)
         {
             services.AddScoped<TicketEmailTemplateBuilder>();
+            services.AddScoped<UserEmailTemplateBuilder>();
             services.AddScoped<INotificationPort, NotificationPort>();
             services.AddHostedService<TicketSlaMonitorHostedService>();
 
