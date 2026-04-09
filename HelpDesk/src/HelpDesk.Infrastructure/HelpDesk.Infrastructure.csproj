@@ -26,6 +26,16 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
 
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
+
+    <!-- Alternativa 2 -->
+    <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
+    <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+
+    <!-- Alternativa 3 -->
+    <PackageReference Include="Mail.dll" Version="3.0.25338.1532" />
+
+    <!-- Alternativa 4 -->
+    <PackageReference Include="Aspose.Email" Version="26.3.0" />
   </ItemGroup>
 
   <ItemGroup>
