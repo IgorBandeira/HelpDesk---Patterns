@@ -1,4 +1,4 @@
-﻿using HelpDesk.Application.Shared.Ports;
+﻿using HelpDesk.Application.Operations.Ports.Email;
 using HelpDesk.Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

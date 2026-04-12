@@ -1,5 +1,5 @@
 ﻿using HelpDesk.Application.Shared.Abstractions;
-using HelpDesk.Application.Shared.Ports;
+using HelpDesk.Application.Operations.Ports.Email;
 using HelpDesk.Application.Operations.Ports;
 using HelpDesk.Infrastructure.Persistence;
 using HelpDesk.Infrastructure.Operations.Models;
