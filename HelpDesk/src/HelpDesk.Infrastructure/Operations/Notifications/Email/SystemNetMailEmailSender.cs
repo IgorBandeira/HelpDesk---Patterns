@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
-using HelpDesk.Application.Shared.Ports;
+using HelpDesk.Application.Operations.Ports.Email;
 using HelpDesk.Infrastructure.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

@@ -1,5 +1,5 @@
 ﻿using System.Security.Authentication;
-using HelpDesk.Application.Shared.Ports;
+using HelpDesk.Application.Operations.Ports.Email;
 using HelpDesk.Infrastructure.Options;
 using Limilabs.Client.SMTP;
 using Limilabs.Mail;

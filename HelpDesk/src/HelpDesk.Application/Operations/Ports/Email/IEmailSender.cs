@@ -1,4 +1,4 @@
-﻿namespace HelpDesk.Application.Shared.Ports
+﻿namespace HelpDesk.Application.Operations.Ports.Email
 {
     public sealed record EmailMessage(
         IReadOnlyCollection<string> To,

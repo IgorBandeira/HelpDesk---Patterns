@@ -1,6 +1,6 @@
 ﻿using HelpDesk.Api.DependencyInjection;
 using HelpDesk.Application.Attachments.Ports;
-using HelpDesk.Application.Shared.Ports;
+using HelpDesk.Application.Operations.Ports.Email;
 using HelpDesk.Infrastructure.Attachments.DependencyInjection;
 using HelpDesk.Infrastructure.Collaboration.DependencyInjection;
 using HelpDesk.Infrastructure.IdentityAccess.DependencyInjection;
