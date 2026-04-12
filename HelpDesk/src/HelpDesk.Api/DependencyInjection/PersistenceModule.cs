@@ -7,7 +7,7 @@ namespace HelpDesk.Api.DependencyInjection
     {
         public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("HelpDesk");
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseMySql(

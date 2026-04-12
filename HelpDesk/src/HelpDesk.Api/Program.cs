@@ -9,21 +9,15 @@ using HelpDesk.Infrastructure.Attachments.DependencyInjection;
 using HelpDesk.Infrastructure.IdentityAccess.DependencyInjection;
 using HelpDesk.Infrastructure.Operations.DependencyInjection;
 using HelpDesk.Infrastructure.Operations.Notifications.Email.DependencyInjection;
-using HelpDesk.Infrastructure.Persistence;
 using HelpDesk.Infrastructure.ServiceCatalog.DependencyInjection;
 using HelpDesk.Infrastructure.Shared.DependencyInjection;
 using HelpDesk.Infrastructure.Ticketing.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
-var cs = builder.Configuration.GetConnectionString("HelpDesk");
-builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
 builder.Services.AddIdentityAccessInfrastructure();
 builder.Services.AddIdentityAccessApi();
