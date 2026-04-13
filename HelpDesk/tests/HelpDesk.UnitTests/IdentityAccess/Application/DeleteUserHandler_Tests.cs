@@ -2,6 +2,7 @@
 using HelpDesk.Application.IdentityAccess.UseCases.DeleteUser;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.UnitTests.IdentityAccess.Fakes;
+using HelpDesk.UnitTests.Shared.Fakes;
 
 namespace HelpDesk.UnitTests.IdentityAccess.Application
 {
@@ -16,10 +17,12 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var tickets = new FakeTicketUserQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var userToDelete = repo.Seed("R", "r@x.com", "Requester");
 
-            var handler = new DeleteUserHandler(userRead, repo, tickets);
+            var handler = new DeleteUserHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteUserCommand(
                 Id: userToDelete.Id,
@@ -42,8 +45,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var tickets = new FakeTicketUserQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new DeleteUserHandler(userRead, repo, tickets);
+            var handler = new DeleteUserHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteUserCommand(
                 Id: 999,
@@ -66,11 +71,13 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var tickets = new FakeTicketUserQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var userToDelete = repo.Seed("A", "a@x.com", "Agent");
             tickets.MarkActiveAsAssignee(userToDelete.Id);
 
-            var handler = new DeleteUserHandler(userRead, repo, tickets);
+            var handler = new DeleteUserHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteUserCommand(
                 Id: userToDelete.Id,
@@ -93,11 +100,13 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var tickets = new FakeTicketUserQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var userToDelete = repo.Seed("R", "r@x.com", "Requester");
             tickets.MarkActiveAsRequester(userToDelete.Id);
 
-            var handler = new DeleteUserHandler(userRead, repo, tickets);
+            var handler = new DeleteUserHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteUserCommand(
                 Id: userToDelete.Id,
@@ -120,10 +129,12 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var tickets = new FakeTicketUserQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var userToDelete = repo.Seed("R", "r@x.com", "Requester");
 
-            var handler = new DeleteUserHandler(userRead, repo, tickets);
+            var handler = new DeleteUserHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteUserCommand(
                 Id: userToDelete.Id,

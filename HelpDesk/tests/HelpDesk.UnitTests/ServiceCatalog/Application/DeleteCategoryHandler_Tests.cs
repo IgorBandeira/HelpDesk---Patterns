@@ -3,6 +3,7 @@ using HelpDesk.Application.ServiceCatalog.UseCases.DeleteCategory;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.UnitTests.IdentityAccess.Fakes;
 using HelpDesk.UnitTests.ServiceCatalog.Fakes;
+using HelpDesk.UnitTests.Shared.Fakes;
 
 namespace HelpDesk.UnitTests.ServiceCatalog.Application
 {
@@ -16,11 +17,13 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
 
             var repo = new InMemoryCategoryRepository();
             var tickets = new FakeTicketQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var parent = repo.Seed("Parent");
             _ = repo.Seed("Child", parentId: parent.Id);
 
-            var handler = new DeleteCategoryHandler(userRead, repo, tickets);
+            var handler = new DeleteCategoryHandler(userRead, repo, tickets, clock, dispatcher);
 
             var cmd = new DeleteCategoryCommand(UserId: 1, CategoryId: parent.Id);
 
@@ -34,11 +37,13 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
 
             var repo2 = new InMemoryCategoryRepository();
             var tickets2 = new FakeTicketQueryPort();
+            var clock2 = new FakeClock();
+            var dispatcher2 = new FakeDomainEventDispatcher();
 
             var cat = repo2.Seed("ToDelete");
             tickets2.MarkActiveTicketsForCategory(cat.Id);
 
-            var handler2 = new DeleteCategoryHandler(userRead2, repo2, tickets2);
+            var handler2 = new DeleteCategoryHandler(userRead2, repo2, tickets2, clock2, dispatcher2);
             var cmd2 = new DeleteCategoryCommand(1, cat.Id);
 
             var act2 = async () => await handler2.HandleAsync(cmd2);
@@ -55,9 +60,11 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
 
             var repo = new InMemoryCategoryRepository();
             var tickets = new FakeTicketQueryPort();
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var cat = repo.Seed("X");
-            var handler = new DeleteCategoryHandler(userRead, repo, tickets);
+            var handler = new DeleteCategoryHandler(userRead, repo, tickets, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new DeleteCategoryCommand(1, cat.Id));
 

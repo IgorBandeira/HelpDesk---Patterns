@@ -4,6 +4,7 @@ using HelpDesk.Application.ServiceCatalog.UseCases.CreateCategory;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.UnitTests.IdentityAccess.Fakes;
 using HelpDesk.UnitTests.ServiceCatalog.Fakes;
+using HelpDesk.UnitTests.Shared.Fakes;
 
 namespace HelpDesk.UnitTests.ServiceCatalog.Application
 {
@@ -16,7 +17,9 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
             userRead.Seed(1, "Requester User", "requester@x.com", "Requester");
 
             var repo = new InMemoryCategoryRepository();
-            var handler = new CreateCategoryHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateCategoryHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateCategoryCommand(
                 UserId: 1,
@@ -36,7 +39,9 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
             userRead.Seed(1, "Manager User", "manager@x.com", "Manager");
 
             var repo = new InMemoryCategoryRepository();
-            var handler = new CreateCategoryHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateCategoryHandler(userRead, repo, clock, dispatcher);
 
             var cmdBadParent = new CreateCategoryCommand(
                 1,
@@ -69,7 +74,9 @@ namespace HelpDesk.UnitTests.ServiceCatalog.Application
             var repo = new InMemoryCategoryRepository();
             repo.Seed("Network");
 
-            var handler = new CreateCategoryHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateCategoryHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateCategoryCommand(
                 1,

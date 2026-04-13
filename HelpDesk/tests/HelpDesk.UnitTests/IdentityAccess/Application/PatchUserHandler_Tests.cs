@@ -3,6 +3,7 @@ using HelpDesk.Application.IdentityAccess.DTOs;
 using HelpDesk.Application.IdentityAccess.UseCases.PatchUser;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.UnitTests.IdentityAccess.Fakes;
+using HelpDesk.UnitTests.Shared.Fakes;
 
 namespace HelpDesk.UnitTests.IdentityAccess.Application
 {
@@ -17,8 +18,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var user = repo.Seed("R", "r@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user.Id,
@@ -41,7 +44,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             userRead.Seed(10, "Manager User", "manager@x.com", "Manager");
 
             var repo = new InMemoryUserRepository();
-            var handler = new PatchUserHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: 999,
@@ -65,8 +71,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var user = repo.Seed("John", "john@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user.Id,
@@ -90,8 +98,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var user = repo.Seed("John", "john@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user.Id,
@@ -114,11 +124,12 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             userRead.Seed(10, "Manager User", "manager@x.com", "Manager");
 
             var repo = new InMemoryUserRepository();
-
             var user1 = repo.Seed("A", "a@x.com", "Requester");
             var user2 = repo.Seed("B", "b@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user2.Id,
@@ -142,8 +153,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var user = repo.Seed("John", "john@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user.Id,
@@ -167,8 +180,10 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
 
             var repo = new InMemoryUserRepository();
             var user = repo.Seed("John", "john@x.com", "Requester");
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new PatchUserHandler(userRead, repo);
+            var handler = new PatchUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new PatchUserCommand(
                 Id: user.Id,
