@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using HelpDesk.Infrastructure.Persistence.Adapters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-
 
 namespace HelpDesk.Infrastructure.Persistence
 {
@@ -17,15 +17,14 @@ namespace HelpDesk.Infrastructure.Persistence
                 .AddEnvironmentVariables()
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("HelpDesk");
-
+            var connectionString = configuration.GetConnectionString("HelpDesk_Postgre");
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new InvalidOperationException("Connection string 'HelpDesk' não encontrada.");
 
+            IDatabaseProviderAdapter adapter = new PostgreSqlDatabaseProvider();
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseMySql(
-                connectionString,
-                ServerVersion.AutoDetect(connectionString));
+            adapter.Configure(optionsBuilder, connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

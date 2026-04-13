@@ -12,22 +12,33 @@ namespace HelpDesk.Infrastructure.Persistence.Configurations.Attachments
             builder.ToTable("Attachments");
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.FileName).HasMaxLength(255).IsRequired();
-            builder.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            builder.Property(x => x.FileName)
+                .HasMaxLength(255)
+                .IsRequired();
 
-            builder.Property(x => x.StorageKey).HasMaxLength(1000).IsRequired();
-            builder.Property(x => x.PublicUrl).HasMaxLength(2000);
+            builder.Property(x => x.ContentType)
+                .HasMaxLength(128)
+                .IsRequired();
 
-            builder.Property(x => x.UploadedAt).IsRequired();
+            builder.Property(x => x.StorageKey)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            builder.Property(x => x.PublicUrl)
+                .HasMaxLength(2000);
+
+            builder.Property(x => x.UploadedAt)
+                .HasColumnType("timestamp without time zone")
+                .IsRequired();
 
             builder.HasOne<TicketEntity>()
-             .WithMany(t => t.Attachments)
-             .HasForeignKey(x => x.TicketId);
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(x => x.TicketId);
 
             builder.HasOne(x => x.UploadedBy)
-             .WithMany()
-             .HasForeignKey(x => x.UploadedById)
-             .OnDelete(DeleteBehavior.SetNull);
+                .WithMany()
+                .HasForeignKey(x => x.UploadedById)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -10,24 +10,50 @@ namespace HelpDesk.Infrastructure.Persistence.Configurations.Ticketing
         {
             builder.ToTable("Tickets");
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Title).HasMaxLength(180).IsRequired();
-            builder.Property(x => x.Status).HasMaxLength(30).IsRequired();
-            builder.Property(x => x.PriorityLevel).HasMaxLength(20).IsRequired();
+
+            builder.Property(x => x.Title)
+                .HasMaxLength(180)
+                .IsRequired();
+
+            builder.Property(x => x.Status)
+                .HasMaxLength(30)
+                .IsRequired();
+
+            builder.Property(x => x.PriorityLevel)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            builder.Property(x => x.CreatedAt)
+                .HasColumnType("timestamp without time zone")
+                .IsRequired();
+
+            builder.Property(x => x.SlaStartAt)
+                .HasColumnType("timestamp without time zone")
+                .IsRequired();
+
+            builder.Property(x => x.AssignedAt)
+                .HasColumnType("timestamp without time zone");
+
+            builder.Property(x => x.ClosedAt)
+                .HasColumnType("timestamp without time zone");
+
+            builder.Property(x => x.SlaDueAt)
+                .HasColumnType("timestamp without time zone");
 
             builder.HasOne(x => x.Requester)
-             .WithMany(x => x.RequestedTickets)
-             .HasForeignKey(x => x.RequesterId)
-             .OnDelete(DeleteBehavior.SetNull);
+                .WithMany(x => x.RequestedTickets)
+                .HasForeignKey(x => x.RequesterId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(x => x.Assignee)
-             .WithMany(x => x.AssignedTickets)
-             .HasForeignKey(x => x.AssigneeId)
-             .OnDelete(DeleteBehavior.SetNull);
+                .WithMany(x => x.AssignedTickets)
+                .HasForeignKey(x => x.AssigneeId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(x => x.Category)
-             .WithMany()
-             .HasForeignKey(x => x.CategoryId)
-             .OnDelete(DeleteBehavior.SetNull);
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

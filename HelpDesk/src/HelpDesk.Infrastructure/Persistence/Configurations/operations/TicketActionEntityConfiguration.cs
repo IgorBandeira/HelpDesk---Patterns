@@ -10,8 +10,14 @@ namespace HelpDesk.Infrastructure.Persistence.Configurations.Operations
         {
             builder.ToTable("TicketActions");
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Description).HasMaxLength(600).IsRequired();
-            builder.Property(x => x.CreatedAt).IsRequired();
+
+            builder.Property(x => x.Description)
+                .HasMaxLength(600)
+                .IsRequired();
+
+            builder.Property(x => x.CreatedAt)
+                .HasColumnType("timestamp without time zone")
+                .IsRequired();
 
             builder.HasOne(x => x.Ticket)
                 .WithMany(t => t.Actions)
