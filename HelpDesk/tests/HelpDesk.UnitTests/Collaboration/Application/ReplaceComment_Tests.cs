@@ -20,17 +20,20 @@ namespace HelpDesk.UnitTests.Collaboration.Application
             var users = new InMemoryUserReadPort();
             users.Seed(new(1, "Author", "aut@.com", "Requester"));
             users.Seed(new(2, "Other", "out@.com", "Requester"));
+
             var tickets = new InMemoryTicketReadPort();
             tickets.Seed(new(Id: 10, Status: TicketStatus.Novo, RequesterId: 1, AssigneeId: null));
+
             var repo = new InMemoryCommentRepository();
             var commentReads = new InMemoryCommentReadPort(repo);
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var add = new AddCommentHandler(users, tickets, repo, clock);
+            var add = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
             var created = await add.HandleAsync(new AddCommentCommand(
                 10, 1, new AddCommentDto("x", CommentVisibility.Public)));
 
-            var handler = new ReplaceCommentMessageHandler(tickets, repo, commentReads, clock);
+            var handler = new ReplaceCommentMessageHandler(tickets, repo, commentReads, users, clock, dispatcher);
 
             var actOther = async () => await handler.HandleAsync(
                 new ReplaceCommentMessageCommand(10, created.Id, 2, new UpdateCommentMessageDto("hack")));
@@ -47,11 +50,16 @@ namespace HelpDesk.UnitTests.Collaboration.Application
         [Fact]
         public async Task Replace_Should_Block_When_Ticket_Is_Inactive()
         {
+            var users = new InMemoryUserReadPort();
+            users.Seed(new(1, "Author", "aut@.com", "Requester"));
+
             var tickets = new InMemoryTicketReadPort();
             tickets.Seed(new(Id: 10, Status: TicketStatus.Fechado, RequesterId: 1, AssigneeId: null));
+
             var repo = new InMemoryCommentRepository();
             var commentReads = new InMemoryCommentReadPort(repo);
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var comment = TicketComment.CreateNew(
                 ticketId: 10,
@@ -59,9 +67,10 @@ namespace HelpDesk.UnitTests.Collaboration.Application
                 visibility: CommentVisibility.Public,
                 message: CommentMessage.Create("x"),
                 now: clock.Now);
+
             await repo.AddAsync(comment);
 
-            var handler = new ReplaceCommentMessageHandler(tickets, repo, commentReads, clock);
+            var handler = new ReplaceCommentMessageHandler(tickets, repo, commentReads, users, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(
                 new ReplaceCommentMessageCommand(10, comment.Id, 1, new UpdateCommentMessageDto("novo")));

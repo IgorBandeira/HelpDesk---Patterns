@@ -24,8 +24,9 @@ namespace HelpDesk.UnitTests.Attachments.Application
             var repo = new InMemoryAttachmentRepository();
             var storage = new FakeFileStoragePort();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock);
+            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock, dispatcher);
 
             using var blockedContent = new MemoryStream(new byte[100]);
             var blockedFile = new UploadFile("virus.exe", "application/octet-stream", 100, blockedContent);
@@ -58,8 +59,9 @@ namespace HelpDesk.UnitTests.Attachments.Application
             var repo = new InMemoryAttachmentRepository();
             var storage = new FakeFileStoragePort();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock);
+            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock, dispatcher);
 
             using var content = new MemoryStream(new byte[100]);
             var file = new UploadFile("a.txt", "text/plain", 100, content);
@@ -83,8 +85,9 @@ namespace HelpDesk.UnitTests.Attachments.Application
             var repo = new InMemoryAttachmentRepository();
             var storage = new FakeFileStoragePort();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock);
+            var handler = new UploadAttachmentHandler(tickets, users, repo, storage, clock, dispatcher);
 
             using var content = new MemoryStream(new byte[100]);
             var file = new UploadFile("a.txt", "text/plain", 100, content);

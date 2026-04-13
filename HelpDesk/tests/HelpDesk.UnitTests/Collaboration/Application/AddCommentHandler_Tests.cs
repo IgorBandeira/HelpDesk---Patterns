@@ -23,8 +23,9 @@ namespace HelpDesk.UnitTests.Collaboration.Application
 
             var repo = new InMemoryCommentRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new AddCommentHandler(users, tickets, repo, clock);
+            var handler = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
 
             var allowed = await handler.HandleAsync(new AddCommentCommand(
                 TicketId: 10,
@@ -53,8 +54,9 @@ namespace HelpDesk.UnitTests.Collaboration.Application
 
             var repo = new InMemoryCommentRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var handler = new AddCommentHandler(users, tickets, repo, clock);
+            var handler = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
 
             var act = async () => await handler.HandleAsync(new AddCommentCommand(
                 10, 1, new AddCommentDto("x", CommentVisibility.Public)));

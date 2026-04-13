@@ -19,13 +19,16 @@ namespace HelpDesk.UnitTests.Collaboration.Application
             var users = new InMemoryUserReadPort();
             users.Seed(new(1, "Req", "req@.com", "Requester"));
             users.Seed(new(2, "Out", "out@.com", "Requester"));
+
             var tickets = new InMemoryTicketReadPort();
             tickets.Seed(new(Id: 10, Status: TicketStatus.Novo, RequesterId: 1, AssigneeId: null));
+
             var repo = new InMemoryCommentRepository();
             var commentReads = new InMemoryCommentReadPort(repo);
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var add = new AddCommentHandler(users, tickets, repo, clock);
+            var add = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
             await add.HandleAsync(new AddCommentCommand(10, 1, new AddCommentDto("interno", CommentVisibility.Internal)));
             await add.HandleAsync(new AddCommentCommand(10, 1, new AddCommentDto("publico", CommentVisibility.Public)));
 
@@ -42,13 +45,16 @@ namespace HelpDesk.UnitTests.Collaboration.Application
             var users = new InMemoryUserReadPort();
             users.Seed(new(1, "Req", "req@.com", "Requester"));
             users.Seed(new(2, "Out", "out@.com", "Requester"));
+
             var tickets = new InMemoryTicketReadPort();
             tickets.Seed(new(Id: 10, Status: TicketStatus.Novo, RequesterId: 1, AssigneeId: null));
+
             var repo = new InMemoryCommentRepository();
             var commentReads = new InMemoryCommentReadPort(repo);
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var add = new AddCommentHandler(users, tickets, repo, clock);
+            var add = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
             var internalCreated = await add.HandleAsync(
                 new AddCommentCommand(10, 1, new AddCommentDto("interno", CommentVisibility.Internal)));
             var publicCreated = await add.HandleAsync(
@@ -58,11 +64,13 @@ namespace HelpDesk.UnitTests.Collaboration.Application
 
             var actInternal = async () => await get.HandleAsync(
                 new GetCommentByIdQuery(TicketId: 10, CommentId: internalCreated.Id, UserId: 2));
+
             (await actInternal.Should().ThrowAsync<AppException>())
                 .Where(e => e.StatusCode == HttpStatusCodes.NotFound);
 
             var dto = await get.HandleAsync(
                 new GetCommentByIdQuery(TicketId: 10, CommentId: publicCreated.Id, UserId: 2));
+
             dto.Id.Should().Be(publicCreated.Id);
             dto.Visibility.Should().Be(CommentVisibility.Public);
             dto.Message.Should().Be("publico");

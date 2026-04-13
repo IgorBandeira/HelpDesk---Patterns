@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using HelpDesk.Application.Attachments.Ports;
 using HelpDesk.Application.Attachments.UseCases.GetAttachmentById;
 using HelpDesk.Application.Attachments.UseCases.ListAttachments;
@@ -41,8 +41,9 @@ namespace HelpDesk.UnitTests.Attachments.Application
             var repo = new InMemoryAttachmentRepository();
             var storage = new FakeFileStoragePort();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var upload = new UploadAttachmentHandler(tickets, users, repo, storage, clock);
+            var upload = new UploadAttachmentHandler(tickets, users, repo, storage, clock, dispatcher);
 
             using var content1 = new MemoryStream(new byte[100]);
             using var content2 = new MemoryStream(new byte[100]);
@@ -88,8 +89,9 @@ namespace HelpDesk.UnitTests.Attachments.Application
             var repo = new InMemoryAttachmentRepository();
             var storage = new FakeFileStoragePort();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var upload = new UploadAttachmentHandler(tickets, users, repo, storage, clock);
+            var upload = new UploadAttachmentHandler(tickets, users, repo, storage, clock, dispatcher);
 
             using var content = new MemoryStream(new byte[100]);
 

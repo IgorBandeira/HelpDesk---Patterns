@@ -36,7 +36,7 @@ namespace HelpDesk.UnitTests.IdentityAccess.Domain
                 UserRole.Create("Requester"));
 
             // Act
-            user.UpdateName(UserName.Create("  Johnny  "));
+            user.ReplaceName(UserName.Create("  Johnny  "));
 
             // Assert
             user.Name.Value.Should().Be("Johnny");
@@ -52,7 +52,7 @@ namespace HelpDesk.UnitTests.IdentityAccess.Domain
                 UserRole.Create("Requester"));
 
             // Act
-            user.UpdateEmail(EmailAddress.Create("johnny@x.com"));
+            user.ReplaceEmail(EmailAddress.Create("johnny@x.com"));
 
             // Assert
             user.Email.Value.Should().Be("johnny@x.com");
@@ -68,7 +68,7 @@ namespace HelpDesk.UnitTests.IdentityAccess.Domain
                 UserRole.Create("Requester"));
 
             // Act
-            user.UpdateRole(UserRole.Create("Agent"));
+            user.ReplaceRole(UserRole.Create("Agent"));
 
             // Assert
             user.Role.Value.Should().Be("Agent");

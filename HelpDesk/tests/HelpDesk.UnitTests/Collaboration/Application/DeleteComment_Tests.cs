@@ -27,21 +27,22 @@ namespace HelpDesk.UnitTests.Collaboration.Application
 
             var repo = new InMemoryCommentRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
-            var add = new AddCommentHandler(users, tickets, repo, clock);
+            var add = new AddCommentHandler(users, tickets, repo, clock, dispatcher);
             var created = await add.HandleAsync(new AddCommentCommand(
                 10, 1, new AddCommentDto("x", CommentVisibility.Public)));
 
-            var handler = new DeleteCommentHandler(tickets, repo);
+            var handler = new DeleteCommentHandler(tickets, repo, users, clock, dispatcher);
 
-            // Act 
+            // Act
             var actOther = async () => await handler.HandleAsync(new DeleteCommentCommand(10, created.Id, 2));
 
             // Assert
             (await actOther.Should().ThrowAsync<AppException>())
                 .Where(e => e.StatusCode == HttpStatusCodes.Forbidden);
 
-            // Act 
+            // Act
             var actAuthor = async () => await handler.HandleAsync(new DeleteCommentCommand(10, created.Id, 1));
 
             // Assert
@@ -52,11 +53,15 @@ namespace HelpDesk.UnitTests.Collaboration.Application
         public async Task Delete_Should_Block_When_Ticket_Is_Inactive()
         {
             // Arrange
+            var users = new InMemoryUserReadPort();
+            users.Seed(new(1, "Author", "aut@.com", "Requester"));
+
             var tickets = new InMemoryTicketReadPort();
             tickets.Seed(new(Id: 10, Status: TicketStatus.Cancelado, RequesterId: 1, AssigneeId: null));
 
             var repo = new InMemoryCommentRepository();
             var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
 
             var comment = TicketComment.CreateNew(
                 ticketId: 10,
@@ -67,7 +72,7 @@ namespace HelpDesk.UnitTests.Collaboration.Application
 
             await repo.AddAsync(comment);
 
-            var handler = new DeleteCommentHandler(tickets, repo);
+            var handler = new DeleteCommentHandler(tickets, repo, users, clock, dispatcher);
 
             // Act
             var act = async () => await handler.HandleAsync(new DeleteCommentCommand(10, comment.Id, 1));

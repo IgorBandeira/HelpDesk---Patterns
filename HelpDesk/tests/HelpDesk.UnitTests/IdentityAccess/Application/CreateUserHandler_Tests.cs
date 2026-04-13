@@ -3,6 +3,7 @@ using HelpDesk.Application.IdentityAccess.DTOs;
 using HelpDesk.Application.IdentityAccess.UseCases.CreateUser;
 using HelpDesk.Application.Shared.Errors;
 using HelpDesk.UnitTests.IdentityAccess.Fakes;
+using HelpDesk.UnitTests.Shared.Fakes;
 
 namespace HelpDesk.UnitTests.IdentityAccess.Application
 {
@@ -16,7 +17,9 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             userRead.Seed(10, "Req User", "req@x.com", "Requester");
 
             var repo = new InMemoryUserRepository();
-            var handler = new CreateUserHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateUserCommand(
                 AuthUserId: 10,
@@ -43,7 +46,9 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             userRead.Seed(10, "Manager User", "manager@x.com", "Manager");
 
             var repo = new InMemoryUserRepository();
-            var handler = new CreateUserHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateUserCommand(
                 AuthUserId: 10,
@@ -72,7 +77,9 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             var repo = new InMemoryUserRepository();
             repo.Seed("Existing", "test@x.com", "Requester");
 
-            var handler = new CreateUserHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateUserCommand(
                 AuthUserId: 10,
@@ -99,7 +106,9 @@ namespace HelpDesk.UnitTests.IdentityAccess.Application
             userRead.Seed(10, "Manager User", "manager@x.com", "Manager");
 
             var repo = new InMemoryUserRepository();
-            var handler = new CreateUserHandler(userRead, repo);
+            var clock = new FakeClock();
+            var dispatcher = new FakeDomainEventDispatcher();
+            var handler = new CreateUserHandler(userRead, repo, clock, dispatcher);
 
             var cmd = new CreateUserCommand(
                 AuthUserId: 10,
